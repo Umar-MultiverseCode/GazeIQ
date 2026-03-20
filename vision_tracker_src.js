@@ -45,34 +45,7 @@ async function detectFaces() {
     let isLooking = false;
 
     if (predictions.length > 0) {
-      const face = predictions[0];
-      const prob = face.probability[0];
-      
-      // Balanced probability threshold to prevent false-negatives in bad lighting
-      if (prob > 0.65) {
-        // Enforce attention bounds using facial landmarks
-        // landmarks: 0=rightEye, 1=leftEye, 2=nose, 3=mouth
-        const rightEye = face.landmarks[0];
-        const leftEye = face.landmarks[1];
-        const nose = face.landmarks[2];
-
-        // Check if head is turned significantly (nose outside of eyes horizontal bounds)
-        // Adjust for mirrored video feed with a highly relaxed margin of 50px
-        const minX = Math.min(rightEye[0], leftEye[0]) - 50;
-        const maxX = Math.max(rightEye[0], leftEye[0]) + 50;
-        
-        const isLookingForward = (nose[0] >= minX && nose[0] <= maxX);
-        
-        // Ensure face is upright but extremely generous (laptop cameras point UP)
-        const avgEyeY = (rightEye[1] + leftEye[1]) / 2;
-        const lookingAtScreen = (nose[1] > avgEyeY - 20);
-
-        if (isLookingForward && lookingAtScreen) {
-          isLooking = true;
-        } else {
-          emitDebug("Face out of bounds (Looking away or down).");
-        }
-      }
+      isLooking = true;
     }
 
     if (isLooking) {
