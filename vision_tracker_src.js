@@ -29,38 +29,21 @@ async function detectFaces() {
   if (!tracking) return;
   
   try {
-    // Battery optimization - throttle if battery is low
-    if (navigator.getBattery) {
-      const battery = await navigator.getBattery();
-      if (battery.level < 0.2 && !battery.charging) {
-        emitDebug("Battery critical. Throttling neural engine.");
-        setTimeout(detectFaces, 1000); 
-        return;
-      }
-    }
-
     const returnTensors = false;
     let predictions = await model.estimateFaces(video, returnTensors);
 
-    let isLooking = false;
-
     if (predictions.length > 0) {
-      isLooking = true;
-    }
-
-    if (isLooking) {
       lastFaceDetectedTime = Date.now();
-      emitDebug("Face accurately tracking screen.");
+      emitDebug("Face detected.");
       if (currentState === 'absent') {
         currentState = 'present';
         chrome.runtime.sendMessage({ type: 'FACE_STATUS', status: 'present' }).catch(()=>{});
       }
     } else {
       let timeSince = Date.now() - lastFaceDetectedTime;
-      emitDebug("Attention lost. Missing for: " + Math.round(timeSince/1000) + "s");
+      emitDebug("No face. Missing for: " + Math.round(timeSince/1000) + "s");
       
-      // Fast pause for strict tracking
-      if (timeSince >= 300) {
+      if (timeSince >= 500) {
         if (currentState === 'present') {
           currentState = 'absent';
           chrome.runtime.sendMessage({ type: 'FACE_STATUS', status: 'absent' }).catch(()=>{});
@@ -71,7 +54,7 @@ async function detectFaces() {
     emitDebug("Prediction error: " + e.message);
   }
 
-  setTimeout(detectFaces, 250); 
+  setTimeout(detectFaces, 200); 
 }
 
 async function main() {
