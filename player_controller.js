@@ -73,9 +73,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       statusText.style.color = '#8a2be2';
     }
     if (video && !video.paused) {
-      // Don't pause if document is hidden but PiP is active
-      if (document.hidden && document.pictureInPictureElement) return;
-      
       console.log("[GazeIQ] Face not detected. Pausing video.");
       pausedByGazeIQ = true;
       video.pause();

@@ -15,14 +15,6 @@ async function setupOffscreenDocument(path) {
   offscreenDocumentReady = true;
 }
 
-// System Idle Detection
-chrome.idle.setDetectionInterval(900); // 15 minutes of input inactivity
-chrome.idle.onStateChanged.addListener((newState) => {
-  if (newState !== 'active') {
-    broadcastFaceStatus('absent'); // Assume absent to save power/video
-  }
-});
-
 function broadcastFaceStatus(status) {
   const urlPatterns = [
     "*://*.youtube.com/*",
