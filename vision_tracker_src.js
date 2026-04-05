@@ -42,19 +42,50 @@ async function detectFaces() {
     const returnTensors = false;
     let predictions = await model.estimateFaces(video, returnTensors);
 
+    let isLooking = false;
+
     if (predictions.length > 0) {
+      const face = predictions[0];
+      const prob = face.probability[0];
+      
+      // Strict probability threshold 
+      if (prob > 0.85) {
+        // Enforce attention bounds using facial landmarks
+        // landmarks: 0=rightEye, 1=leftEye, 2=nose, 3=mouth
+        const rightEye = face.landmarks[0];
+        const leftEye = face.landmarks[1];
+        const nose = face.landmarks[2];
+
+        // Check if head is turned significantly (nose outside of eyes horizontal bounds)
+        // Adjust for mirrored video feed
+        const minX = Math.min(rightEye[0], leftEye[0]) - 15;
+        const maxX = Math.max(rightEye[0], leftEye[0]) + 15;
+        
+        const isLookingForward = (nose[0] >= minX && nose[0] <= maxX);
+        
+        // Ensure face is somewhat upright (nose below eyes)
+        const avgEyeY = (rightEye[1] + leftEye[1]) / 2;
+        const lookingAtScreen = (nose[1] > avgEyeY + 10);
+
+        if (isLookingForward && lookingAtScreen) {
+          isLooking = true;
+        }
+      }
+    }
+
+    if (isLooking) {
       lastFaceDetectedTime = Date.now();
-      emitDebug("Face detected.");
+      emitDebug("Face accurately tracking screen.");
       if (currentState === 'absent') {
         currentState = 'present';
         chrome.runtime.sendMessage({ type: 'FACE_STATUS', status: 'present' }).catch(()=>{});
       }
     } else {
       let timeSince = Date.now() - lastFaceDetectedTime;
-      emitDebug("No face. Missing for: " + Math.round(timeSince/1000) + "s");
+      emitDebug("Attention lost. Missing for: " + Math.round(timeSince/1000) + "s");
       
-      // Increased tolerance: allow 500ms blink tolerance
-      if (timeSince >= 500) {
+      // Fast pause for strict tracking
+      if (timeSince >= 300) {
         if (currentState === 'present') {
           currentState = 'absent';
           chrome.runtime.sendMessage({ type: 'FACE_STATUS', status: 'absent' }).catch(()=>{});
