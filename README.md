@@ -16,6 +16,18 @@
 
 ---
 
+## 🎬 Live Demo
+
+<div align="center">
+
+https://github.com/Umar-MultiverseCode/GazeIQ/raw/main/assets/demo.mp4
+
+*GazeIQ detecting gaze absence and autonomously pausing playback — running 100% locally.*
+
+</div>
+
+---
+
 ## 📖 Table of Contents
 1. [Executive Overview](#1-executive-overview)
 2. [Core Architecture Overview](#2-core-architecture-overview)
